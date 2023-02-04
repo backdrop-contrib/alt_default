@@ -1,0 +1,132 @@
+<?php
+/**
+ * @file
+ * Set default values for alt/title fields on images.
+ */
+
+/**
+ * Implements hook_field_info_alter().
+ */
+function alt_default_field_info_alter(&$info) {
+  // Set default values for the new settings.
+  if (isset($info['image'])) {
+    $info['image']['instance_settings']['alt_default_value'] = '';
+    $info['image']['instance_settings']['title_default_value'] = '';
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter() for field_ui_field_edit_form.
+ */
+function alt_default_form_field_ui_field_edit_form_alter(&$form, &$form_state, $form_id) {
+  $entity_type = $form['#instance']['entity_type'];
+  $settings = $form['#instance']['settings'];
+  $token_tree_link = theme('token_tree_link', array(
+    'token_types' => array($entity_type),
+  ));
+
+  // Add new 'default values' settings.
+  $form['instance']['settings']['alt_default_value'] = array(
+    '#type' => 'textfield',
+    '#title' => t('<em>Alt</em> field default value'),
+    '#default_value' => $settings['alt_default_value'],
+    '#description' => t('This field supports tokens.') . ' ' . $token_tree_link,
+    '#weight' => 11,
+    '#element_validate' => array('token_element_validate'),
+    '#token_types' => array($entity_type),
+    '#states' => array(
+      'visible' => array(
+        ':input[name="instance[settings][alt_field]"]' => array('checked' => TRUE),
+      ),
+    ),
+  );
+  $form['instance']['settings']['title_field']['#weight'] = 12;
+  $form['instance']['settings']['title_default_value'] = array(
+    '#type' => 'textfield',
+    '#title' => t('<em>Title</em> field default value'),
+    '#default_value' => $settings['title_default_value'],
+    '#description' => t('This field supports tokens.') . ' ' . $token_tree_link,
+    '#weight' => 13,
+    '#element_validate' => array('token_element_validate'),
+    '#token_types' => array($entity_type),
+    '#states' => array(
+      'visible' => array(
+        ':input[name="instance[settings][title_field]"]' => array('checked' => TRUE),
+      ),
+    ),
+  );
+  $form['instance']['settings']['orientate']['#weight'] = 14;
+}
+
+/**
+ * Implements hook_field_widget_form_alter().
+ */
+function alt_default_field_widget_form_alter(&$element, &$form_state, $context) {
+  // Add a custom process callback for image fields.
+  if ($context['field']['type'] == 'image') {
+    $element[$context['delta']]['#process'][] = 'alt_default_field_widget_process';
+  }
+}
+
+/**
+ * An element #process callback for the image field type.
+ *
+ * Expands the image type to include default values for the alt/title fields.
+ */
+function alt_default_field_widget_process($element, &$form_state, $form) {
+  $item = $element['#value'];
+  $item['fid'] = $element['fid']['#value'];
+  $instance = field_widget_instance($element, $form_state);
+  $settings = $instance['settings'];
+  $token_tree_link = theme('token_tree_link', array(
+    'token_types' => array($instance['entity_type']),
+  ));
+
+  // Override the alt/title fields to add default values for them.
+  $element['alt'] = array(
+    '#title' => t('Alternate text'),
+    '#type' => 'textfield',
+    '#default_value' => isset($item['alt']) ? $item['alt'] : $settings['alt_default_value'],
+    '#description' => t('This text will be used by screen readers, search engines, or when the image cannot be loaded. This field supports tokens.') . ' ' . $token_tree_link,
+    // @see https://web.archive.org/web/20121120150943/http://www.gawds.org/show.php?contentid=28
+    '#maxlength' => 512,
+    '#weight' => -2,
+    '#access' => (bool) $item['fid'] && $settings['alt_field'],
+    '#element_validate' => array('token_element_validate'),
+    '#token_types' => array($instance['entity_type']),
+  );
+  $element['title'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Title'),
+    '#default_value' => isset($item['title']) ? $item['title'] : $settings['title_default_value'],
+    '#description' => t('The title is used as a tool tip when the user hovers the mouse over the image. This field supports tokens.') . ' ' . $token_tree_link,
+    '#maxlength' => 1024,
+    '#weight' => -1,
+    '#access' => (bool) $item['fid'] && $settings['title_field'],
+    '#element_validate' => array('token_element_validate'),
+    '#token_types' => array($instance['entity_type']),
+  );
+
+  return $element;
+}
+
+/**
+ * Implements hook_field_attach_view_alter().
+ */
+function alt_default_field_attach_view_alter(&$output, $context) {
+  foreach (element_children($output) as $field_name) {
+    $element = &$output[$field_name];
+    if ($element['#field_type'] == 'image') {
+      foreach ($element['#items'] as $delta => $item) {
+        // Replace tokens in the alt/title text.
+        if (!empty($item['alt'])) {
+          $element[$delta]['#item']['alt'] = token_replace($item['alt'], array($context['entity_type'] => $context['entity']));
+        }
+        if (!empty($item['title'])) {
+          $element[$delta]['#item']['title'] = token_replace($item['title'], array($context['entity_type'] => $context['entity']));
+        }
+      }
+    }
+  }
+}
+

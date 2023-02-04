@@ -1,0 +1,9 @@
+type = module
+name = Alt/Title Default
+description = Set default values for alt/title fields on images.
+backdrop = 1.x
+dependencies[] = image
+package = Fields
+tags[] = Content
+tags[] = Images
+
