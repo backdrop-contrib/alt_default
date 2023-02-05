@@ -19,43 +19,45 @@ function alt_default_field_info_alter(&$info) {
  * Implements hook_form_FORM_ID_alter() for field_ui_field_edit_form.
  */
 function alt_default_form_field_ui_field_edit_form_alter(&$form, &$form_state, $form_id) {
-  $entity_type = $form['#instance']['entity_type'];
-  $settings = $form['#instance']['settings'];
-  $token_tree_link = theme('token_tree_link', array(
-    'token_types' => array($entity_type),
-  ));
+  if ($form['#field']['type'] == 'image') {
+    $entity_type = $form['#instance']['entity_type'];
+    $settings = $form['#instance']['settings'];
+    $token_tree_link = theme('token_tree_link', array(
+      'token_types' => array($entity_type),
+    ));
 
-  // Add new 'default values' settings.
-  $form['instance']['settings']['alt_default_value'] = array(
-    '#type' => 'textfield',
-    '#title' => t('<em>Alt</em> field default value'),
-    '#default_value' => $settings['alt_default_value'],
-    '#description' => t('This field supports tokens.') . ' ' . $token_tree_link,
-    '#weight' => 11,
-    '#element_validate' => array('token_element_validate'),
-    '#token_types' => array($entity_type),
-    '#states' => array(
-      'visible' => array(
-        ':input[name="instance[settings][alt_field]"]' => array('checked' => TRUE),
+    // Add new 'default values' settings.
+    $form['instance']['settings']['alt_default_value'] = array(
+      '#type' => 'textfield',
+      '#title' => t('<em>Alt</em> field default value'),
+      '#default_value' => $settings['alt_default_value'],
+      '#description' => t('This field supports tokens.') . ' ' . $token_tree_link,
+      '#weight' => 11,
+      '#element_validate' => array('token_element_validate'),
+      '#token_types' => array($entity_type),
+      '#states' => array(
+        'visible' => array(
+          ':input[name="instance[settings][alt_field]"]' => array('checked' => TRUE),
+        ),
       ),
-    ),
-  );
-  $form['instance']['settings']['title_field']['#weight'] = 12;
-  $form['instance']['settings']['title_default_value'] = array(
-    '#type' => 'textfield',
-    '#title' => t('<em>Title</em> field default value'),
-    '#default_value' => $settings['title_default_value'],
-    '#description' => t('This field supports tokens.') . ' ' . $token_tree_link,
-    '#weight' => 13,
-    '#element_validate' => array('token_element_validate'),
-    '#token_types' => array($entity_type),
-    '#states' => array(
-      'visible' => array(
-        ':input[name="instance[settings][title_field]"]' => array('checked' => TRUE),
+    );
+    $form['instance']['settings']['title_field']['#weight'] = 12;
+    $form['instance']['settings']['title_default_value'] = array(
+      '#type' => 'textfield',
+      '#title' => t('<em>Title</em> field default value'),
+      '#default_value' => $settings['title_default_value'],
+      '#description' => t('This field supports tokens.') . ' ' . $token_tree_link,
+      '#weight' => 13,
+      '#element_validate' => array('token_element_validate'),
+      '#token_types' => array($entity_type),
+      '#states' => array(
+        'visible' => array(
+          ':input[name="instance[settings][title_field]"]' => array('checked' => TRUE),
+        ),
       ),
-    ),
-  );
-  $form['instance']['settings']['orientate']['#weight'] = 14;
+    );
+    $form['instance']['settings']['orientate']['#weight'] = 14;
+  }
 }
 
 /**
