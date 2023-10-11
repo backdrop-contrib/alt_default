@@ -23,8 +23,7 @@ https://github.com/backdrop-contrib/alt_default/issues.
 Current Maintainers
 -------------------
 
-- [Peter Anderson](https://github.com/BWPanda)
-- Seeking additional maintainers
+- Seeking maintainer(s)
 
 
 Credits
